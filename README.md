@@ -1,4 +1,5 @@
 ---
+
 title: AI Personal Assistant Comparison Lab
 emoji: 🤖
 colorFrom: blue
@@ -11,14 +12,14 @@ pinned: false
 
 # AI Personal Assistant Comparison Lab
 
-**Live demo (OSS only):** https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab
+**Live demo (OSS only):** [https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab](https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab)
 
 Comparing a **local open-source assistant** (`Qwen/Qwen2.5-0.5B-Instruct`) with a **frontier API assistant** (Google **Gemini**) using the same Gradio UI, shared pipeline, memory, guardrails, tools, evaluation harness, and reporting. The Space shows the OSS assistant only; full OSS vs Gemini comparison and evaluation run **locally** (see Setup below).
 
 
-| Environment                                        | Assistants   | Evaluation                       | Purpose                         |
-| -------------------------------------------------- | ------------ | -------------------------------- | ------------------------------- |
-| **Local** (`DEPLOYMENT_MODE=local`)                | OSS + Gemini | Full 40-prompt eval, both models | Development and fair comparison |
+| Environment                                        | Assistants   | Evaluation                       | Purpose                                                                                      |
+| -------------------------------------------------- | ------------ | -------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Local** (`DEPLOYMENT_MODE=local`)                | OSS + Gemini | Full 40-prompt eval, both models | Development and fair comparison                                                              |
 | **Hugging Face Spaces** (`DEPLOYMENT_MODE=spaces`) | OSS only     | Not available on Space           | [Public demo](https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab) |
 
 
@@ -267,9 +268,10 @@ python -m evals.generate_report
 
 ## Hugging Face Spaces (OSS-only)
 
-Public demo: https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab
+Public demo: [https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab](https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab)
 
 Runs **Qwen2.5-0.5B only** (no Gemini API key, no evaluation runner). First chat message may take 1–3 minutes on CPU while the model loads.
+
 
 | Feature            | Local                      | Spaces (`DEPLOYMENT_MODE=spaces`)         |
 | ------------------ | -------------------------- | ----------------------------------------- |
@@ -277,23 +279,22 @@ Runs **Qwen2.5-0.5B only** (no Gemini API key, no evaluation runner). First chat
 | Evaluation tab     | Full runner                | Read-only note → run locally              |
 | Conversation logs  | `logs/conversations.jsonl` | Best-effort (skipped if disk write fails) |
 
+
 To redeploy: push to the Space git remote with `DEPLOYMENT_MODE=spaces` set in Space variables. Local dev uses `requirements-dev.txt`; the Space uses `requirements.txt` only.
 
 ---
 
 ## Screenshots
 
-Place UI captures in `assets/screenshots/` (e.g. chat comparison, eval metrics, report).
+### Local app (OSS + Gemini)
 
+![Chat — OSS vs Gemini](assets/screenshots/chat-local.png)
 
-| Screenshot           | File (placeholder)                         |
-| -------------------- | ------------------------------------------ |
-| Chat — OSS vs Gemini | `assets/screenshots/chat-local.png`        |
-| Evaluation tab       | `assets/screenshots/eval-tab.png`          |
-| Evaluation report    | `assets/screenshots/evaluation-report.png` |
+![Assistant responses](assets/screenshots/Chat-answers.png)
 
+### Evaluation tab
 
-*[Add images in Phase 13 QA or after deployment.]*
+![Evaluation tab](assets/screenshots/eval-tab.png)
 
 ---
 

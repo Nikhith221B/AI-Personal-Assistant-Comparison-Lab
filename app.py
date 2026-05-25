@@ -110,7 +110,11 @@ def build_ui() -> gr.Blocks:
                     label="Memory turns (exchanges)",
                 )
 
-            chatbot = gr.Chatbot(label="Conversation", height=420)
+            chatbot = gr.Chatbot(
+                label="Conversation",
+                height=420,
+                type="messages",
+            )
             msg = gr.Textbox(label="Message", placeholder="Type a message…")
 
             with gr.Row():
@@ -347,8 +351,11 @@ def main() -> None:
     demo = build_ui()
     launch_kwargs: dict = {"share": False}
     if IS_SPACES_MODE:
-        launch_kwargs["server_name"] = "0.0.0.0"
-        launch_kwargs["show_error"] = True
+        launch_kwargs.update(
+            server_name="0.0.0.0",
+            server_port=7860,
+            show_error=True,
+        )
     demo.launch(**launch_kwargs)
 
 

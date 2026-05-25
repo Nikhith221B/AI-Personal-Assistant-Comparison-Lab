@@ -1,6 +1,8 @@
 # Runtime deps for Hugging Face Spaces and local inference.
 # HF also installs gradio[oauth]==4.44.1; Gradio is in requirements-dev.txt for local.
 # Pillow pin avoids building 10.3.0 from source on Python 3.13 (HF builder).
+# Pydantic pin avoids Gradio 4.x API schema crash (additionalProperties: false → bool).
+pydantic==2.10.6
 pillow>=10.4.0,<11.0
 # Gradio/pydub on Python 3.13 (audioop removed from stdlib; use LTS backport).
 audioop-lts>=0.2.0; python_version >= "3.13"

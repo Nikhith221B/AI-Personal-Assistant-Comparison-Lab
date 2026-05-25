@@ -2,6 +2,8 @@
 # HF also installs gradio[oauth]==4.44.1; Gradio is in requirements-dev.txt for local.
 # Pillow pin avoids building 10.3.0 from source on Python 3.13 (HF builder).
 pillow>=10.4.0,<11.0
+# Gradio/pydub on Python 3.13 (audioop removed from stdlib).
+pyaudioop>=0.3.0
 pandas>=2.0.0,<3.0
 python-dotenv>=1.0.0,<2.0
 --extra-index-url https://download.pytorch.org/whl/cpu

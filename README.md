@@ -11,13 +11,15 @@ pinned: false
 
 # AI Personal Assistant Comparison Lab
 
-Comparing a **local open-source assistant** (`Qwen/Qwen2.5-0.5B-Instruct`) with a **frontier API assistant** (Google **Gemini**) using the same Gradio UI, shared pipeline, memory, guardrails, tools, evaluation harness, and reporting.
+**Live demo (OSS only):** https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab
+
+Comparing a **local open-source assistant** (`Qwen/Qwen2.5-0.5B-Instruct`) with a **frontier API assistant** (Google **Gemini**) using the same Gradio UI, shared pipeline, memory, guardrails, tools, evaluation harness, and reporting. The Space shows the OSS assistant only; full OSS vs Gemini comparison and evaluation run **locally** (see Setup below).
 
 
 | Environment                                        | Assistants   | Evaluation                       | Purpose                         |
 | -------------------------------------------------- | ------------ | -------------------------------- | ------------------------------- |
 | **Local** (`DEPLOYMENT_MODE=local`)                | OSS + Gemini | Full 40-prompt eval, both models | Development and fair comparison |
-| **Hugging Face Spaces** (`DEPLOYMENT_MODE=spaces`) | OSS only     | Not available on Space           | Public demo without API keys    |
+| **Hugging Face Spaces** (`DEPLOYMENT_MODE=spaces`) | OSS only     | Not available on Space           | [Public demo](https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab) |
 
 
 Detailed eval snapshot: `[reports/evaluation_report.md](reports/evaluation_report.md)`.
@@ -257,51 +259,17 @@ python -m evals.generate_report
 
 ## Hugging Face Spaces (OSS-only)
 
-The public Space runs **Qwen2.5-0.5B only** — no Gemini API key, no evaluation tab (full comparison stays local).
+Public demo: https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab
 
-### Deploy checklist
-
-1. On [huggingface.co/new-space](https://huggingface.co/new-space), create a **Gradio** Space (empty repo).
-2. Push this project to the Space git remote (`git push space main`). See clone URL on the Space page.
-3. **Space hardware:** CPU basic is enough for 0.5B inference (slower but free-tier friendly).
-4. In **Settings → Repository variables**, add `DEPLOYMENT_MODE` = `spaces`.
-5. **Do not** set `GEMINI_API_KEY` on the Space.
-6. Entrypoint is **`app.py`** (set in the README YAML frontmatter above).
-7. **`requirements.txt`** is runtime-only (torch, transformers, pillow pin). HF installs Gradio separately; local dev uses `requirements-dev.txt`.
-8. Wait for the build, then open the App tab. The first chat message triggers model download (1–3 minutes on CPU).
-
-### What changes in Spaces mode
-
+Runs **Qwen2.5-0.5B only** (no Gemini API key, no evaluation runner). First chat message may take 1–3 minutes on CPU while the model loads.
 
 | Feature            | Local                      | Spaces (`DEPLOYMENT_MODE=spaces`)         |
 | ------------------ | -------------------------- | ----------------------------------------- |
 | Assistant selector | OSS + Gemini               | OSS only (fixed label)                    |
 | Evaluation tab     | Full runner                | Read-only note → run locally              |
-| `demo.launch`      | Default host               | `server_name="0.0.0.0"` for HF            |
 | Conversation logs  | `logs/conversations.jsonl` | Best-effort (skipped if disk write fails) |
 
-
-### Verify locally before publishing
-
-**PowerShell:**
-
-```powershell
-$env:DEPLOYMENT_MODE="spaces"
-Remove-Item Env:GEMINI_API_KEY -ErrorAction SilentlyContinue
-python app.py
-```
-
-**Bash:**
-
-```bash
-export DEPLOYMENT_MODE=spaces
-unset GEMINI_API_KEY
-python app.py
-```
-
-You should see OSS-only chat, no Gemini selector, and an Evaluation tab that points to the README — with **no crash** without `GEMINI_API_KEY`.
-
-**Public demo link:** https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab
+To redeploy: push to the Space git remote with `DEPLOYMENT_MODE=spaces` set in Space variables. Local dev uses `requirements-dev.txt`; the Space uses `requirements.txt` only.
 
 ---
 

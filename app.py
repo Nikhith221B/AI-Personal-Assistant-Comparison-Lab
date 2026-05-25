@@ -85,264 +85,264 @@ def build_ui() -> gr.Blocks:
                 "with shared memory, guardrails, and tools."
             )
 
-        session_history = gr.State([])
+        with gr.Tabs():
+            with gr.Tab("Chat"):
+                session_history = gr.State([])
 
-        with gr.Tab("Chat"):
-            with gr.Row():
-                if IS_SPACES_MODE:
-                    gr.Markdown(f"**Assistant:** {OSS_LABEL}")
-                    model_choice = gr.State(OSS_LABEL)
-                else:
-                    model_choice = gr.Radio(
-                        choices=MODEL_CHOICES,
-                        value=OSS_LABEL,
-                        label="Assistant",
+                with gr.Row():
+                    if IS_SPACES_MODE:
+                        gr.Markdown(f"**Assistant:** {OSS_LABEL}")
+                        model_choice = gr.State(OSS_LABEL)
+                    else:
+                        model_choice = gr.Radio(
+                            choices=MODEL_CHOICES,
+                            value=OSS_LABEL,
+                            label="Assistant",
+                        )
+
+                with gr.Row():
+                    guardrails_toggle = gr.Checkbox(value=True, label="Safety guardrails")
+                    tools_toggle = gr.Checkbox(value=True, label="Tool use")
+                    memory_slider = gr.Slider(
+                        minimum=2,
+                        maximum=12,
+                        value=default_memory,
+                        step=1,
+                        label="Memory turns (exchanges)",
                     )
 
-            with gr.Row():
-                guardrails_toggle = gr.Checkbox(value=True, label="Safety guardrails")
-                tools_toggle = gr.Checkbox(value=True, label="Tool use")
-                memory_slider = gr.Slider(
-                    minimum=2,
-                    maximum=12,
-                    value=default_memory,
-                    step=1,
-                    label="Memory turns (exchanges)",
+                chatbot = gr.Chatbot(
+                    label="Conversation",
+                    height=420,
+                    type="messages",
                 )
+                msg = gr.Textbox(label="Message", placeholder="Type a message…")
 
-            chatbot = gr.Chatbot(
-                label="Conversation",
-                height=420,
-                type="messages",
-            )
-            msg = gr.Textbox(label="Message", placeholder="Type a message…")
+                with gr.Row():
+                    send_btn = gr.Button("Send", variant="primary")
+                    clear_memory_btn = gr.Button("Clear memory")
+                    clear_chat_btn = gr.Button("Clear chat")
 
-            with gr.Row():
-                send_btn = gr.Button("Send", variant="primary")
-                clear_memory_btn = gr.Button("Clear memory")
-                clear_chat_btn = gr.Button("Clear chat")
+                ready_status = (
+                    "*Ready.* First message downloads and loads Qwen2.5-0.5B on CPU — "
+                    "please allow 1–3 minutes."
+                    if IS_SPACES_MODE
+                    else "*Ready.* OSS first message may take a minute while the model loads."
+                )
+                status_box = gr.Markdown(value=ready_status)
+                model_display = gr.Markdown()
+                latency_display = gr.Markdown()
+                safety_display = gr.Markdown()
+                tool_display = gr.Markdown()
 
-            ready_status = (
-                "*Ready.* First message downloads and loads Qwen2.5-0.5B on CPU — "
-                "please allow 1–3 minutes."
-                if IS_SPACES_MODE
-                else "*Ready.* OSS first message may take a minute while the model loads."
-            )
-            status_box = gr.Markdown(value=ready_status)
-            model_display = gr.Markdown()
-            latency_display = gr.Markdown()
-            safety_display = gr.Markdown()
-            tool_display = gr.Markdown()
+                def respond(
+                    user_message: str,
+                    chat_history: list,
+                    history_state: list,
+                    model: str,
+                    guardrails_on: bool,
+                    tools_on: bool,
+                    memory_turns: float,
+                ):
+                    if not user_message.strip():
+                        return chat_history, history_state, "", gr.update(), gr.update(), gr.update(), gr.update()
 
-            def respond(
-                user_message: str,
-                chat_history: list,
-                history_state: list,
-                model: str,
-                guardrails_on: bool,
-                tools_on: bool,
-                memory_turns: float,
-            ):
-                if not user_message.strip():
-                    return chat_history, history_state, "", gr.update(), gr.update(), gr.update(), gr.update()
-
-                assistant = _get_assistant(model)
-                if isinstance(assistant, OSSAssistant) and not is_model_loaded():
-                    if is_model_loading():
-                        status = "*Loading open-source model…*"
+                    assistant = _get_assistant(model)
+                    if isinstance(assistant, OSSAssistant) and not is_model_loaded():
+                        if is_model_loading():
+                            status = "*Loading open-source model…*"
+                        else:
+                            status = "*Loading open-source model (first request)…*"
                     else:
-                        status = "*Loading open-source model (first request)…*"
-                else:
-                    status = "*Generating response…*"
+                        status = "*Generating response…*"
 
-                result = run_turn(
-                    assistant,
-                    user_message,
-                    history_state,
-                    guardrails_enabled=guardrails_on,
-                    tools_enabled=tools_on,
-                    memory_turns=clamp_memory_turns(int(memory_turns)),
-                )
+                    result = run_turn(
+                        assistant,
+                        user_message,
+                        history_state,
+                        guardrails_enabled=guardrails_on,
+                        tools_enabled=tools_on,
+                        memory_turns=clamp_memory_turns(int(memory_turns)),
+                    )
 
-                _log_interaction(user_message, result)
+                    _log_interaction(user_message, result)
 
-                new_history = list(history_state)
-                new_history.append({"role": "user", "content": user_message})
-                new_history.append({"role": "assistant", "content": result.text})
+                    new_history = list(history_state)
+                    new_history.append({"role": "user", "content": user_message})
+                    new_history.append({"role": "assistant", "content": result.text})
 
-                chat_history = list(chat_history or [])
-                chat_history.append({"role": "user", "content": user_message})
-                chat_history.append({"role": "assistant", "content": result.text})
+                    chat_history = list(chat_history or [])
+                    chat_history.append({"role": "user", "content": user_message})
+                    chat_history.append({"role": "assistant", "content": result.text})
 
-                meta = _format_metadata(result)
-                status = "*Ready.*"
-                return (
-                    chat_history,
-                    new_history,
-                    "",
-                    status,
-                    meta[0],
-                    meta[1],
-                    meta[2],
-                    meta[3],
-                )
+                    meta = _format_metadata(result)
+                    status = "*Ready.*"
+                    return (
+                        chat_history,
+                        new_history,
+                        "",
+                        status,
+                        meta[0],
+                        meta[1],
+                        meta[2],
+                        meta[3],
+                    )
 
-            def clear_memory_only(history_state: list):
-                return [], "*Memory cleared.*", gr.update(), gr.update(), gr.update(), gr.update()
+                def clear_memory_only(history_state: list):
+                    return [], "*Memory cleared.*", gr.update(), gr.update(), gr.update(), gr.update()
 
-            def clear_chat(history_state: list):
-                return [], [], "*Chat and memory cleared.*", "", "", "", ""
+                def clear_chat(history_state: list):
+                    return [], [], "*Chat and memory cleared.*", "", "", "", ""
 
-            inputs = [
-                msg,
-                chatbot,
-                session_history,
-                model_choice,
-                guardrails_toggle,
-                tools_toggle,
-                memory_slider,
-            ]
-            outputs = [
-                chatbot,
-                session_history,
-                msg,
-                status_box,
-                model_display,
-                latency_display,
-                safety_display,
-                tool_display,
-            ]
-
-            send_btn.click(respond, inputs, outputs)
-            msg.submit(respond, inputs, outputs)
-            clear_memory_btn.click(
-                clear_memory_only,
-                inputs=[session_history],
-                outputs=[session_history, status_box, model_display, latency_display, safety_display, tool_display],
-            )
-            clear_chat_btn.click(
-                clear_chat,
-                inputs=[session_history],
-                outputs=[
+                inputs = [
+                    msg,
                     chatbot,
                     session_history,
+                    model_choice,
+                    guardrails_toggle,
+                    tools_toggle,
+                    memory_slider,
+                ]
+                outputs = [
+                    chatbot,
+                    session_history,
+                    msg,
                     status_box,
                     model_display,
                     latency_display,
                     safety_display,
                     tool_display,
-                ],
-            )
+                ]
 
-        if not IS_SPACES_MODE:
-            import pandas as pd
-
-            eval_state = gr.State({"rows": [], "metrics": {}})
+                send_btn.click(respond, inputs, outputs)
+                msg.submit(respond, inputs, outputs)
+                clear_memory_btn.click(
+                    clear_memory_only,
+                    inputs=[session_history],
+                    outputs=[session_history, status_box, model_display, latency_display, safety_display, tool_display],
+                )
+                clear_chat_btn.click(
+                    clear_chat,
+                    inputs=[session_history],
+                    outputs=[
+                        chatbot,
+                        session_history,
+                        status_box,
+                        model_display,
+                        latency_display,
+                        safety_display,
+                        tool_display,
+                    ],
+                )
 
             with gr.Tab("Evaluation"):
-                gr.Markdown(
-                    "### Evaluation\n"
-                    "Runs through the same pipeline as chat (guardrails + tools on). "
-                    "Prompts are **balanced across categories** (not just the first N in the file). "
-                    "CLI: `python -m evals.run_eval` for all 40 prompts, or `--max-prompts N`."
-                )
-                with gr.Row():
-                    eval_max_prompts = gr.Slider(
-                        minimum=5,
-                        maximum=40,
-                        value=10,
-                        step=1,
-                        label="Max prompts (stratified across categories)",
-                        info="10 ≈ 2 per category; 40 = full eval set.",
+                if IS_SPACES_MODE:
+                    gr.Markdown(
+                        "Evaluation runs **locally** only. "
+                        "Set `DEPLOYMENT_MODE=local` in `.env` and see README."
                     )
-                    use_llm_judge = gr.Checkbox(
-                        label="Use LLM judge for OSS factual/memory (extra Gemini calls)",
-                        value=False,
+                else:
+                    import pandas as pd
+
+                    eval_state = gr.State({"rows": [], "metrics": {}})
+
+                    gr.Markdown(
+                        "### Evaluation\n"
+                        "Runs through the same pipeline as chat (guardrails + tools on). "
+                        "Prompts are **balanced across categories** (not just the first N in the file). "
+                        "CLI: `python -m evals.run_eval` for all 40 prompts, or `--max-prompts N`."
                     )
-                run_eval_btn = gr.Button("Run evaluation", variant="primary")
-                clear_eval_btn = gr.Button("Clear results")
-                eval_status = gr.Markdown()
-                metrics_summary = gr.JSON(label="Metrics summary")
-                results_table = gr.Dataframe(label="Results", interactive=False)
-                download_csv = gr.DownloadButton(
-                    label="Download results CSV",
-                    value=None,
-                    interactive=False,
-                )
-
-                def run_sample_evaluation(max_prompts: float, llm_judge: bool):
-                    from evals.generate_report import generate_report
-                    from evals.run_eval import run_evaluation
-
-                    limit = int(max_prompts)
-                    full_run = limit >= 40
-
-                    try:
-                        summary = run_evaluation(
-                            max_prompts=None if full_run else limit,
-                            use_llm_judge=llm_judge,
+                    with gr.Row():
+                        eval_max_prompts = gr.Slider(
+                            minimum=5,
+                            maximum=40,
+                            value=10,
+                            step=1,
+                            label="Max prompts (stratified across categories)",
+                            info="10 ≈ 2 per category; 40 = full eval set.",
                         )
-                    except Exception as exc:
+                        use_llm_judge = gr.Checkbox(
+                            label="Use LLM judge for OSS factual/memory (extra Gemini calls)",
+                            value=False,
+                        )
+                    run_eval_btn = gr.Button("Run evaluation", variant="primary")
+                    clear_eval_btn = gr.Button("Clear results")
+                    eval_status = gr.Markdown()
+                    metrics_summary = gr.JSON(label="Metrics summary")
+                    results_table = gr.Dataframe(label="Results", interactive=False)
+                    download_csv = gr.DownloadButton(
+                        label="Download results CSV",
+                        value=None,
+                        interactive=False,
+                    )
+
+                    def run_sample_evaluation(max_prompts: float, llm_judge: bool):
+                        from evals.generate_report import generate_report
+                        from evals.run_eval import run_evaluation
+
+                        limit = int(max_prompts)
+                        full_run = limit >= 40
+
+                        try:
+                            summary = run_evaluation(
+                                max_prompts=None if full_run else limit,
+                                use_llm_judge=llm_judge,
+                            )
+                        except Exception as exc:
+                            return (
+                                {"error": str(exc)},
+                                pd.DataFrame(),
+                                f"Evaluation failed: {exc}",
+                                gr.update(value=None, interactive=False),
+                                {"rows": [], "metrics": {}},
+                            )
+
+                        try:
+                            generate_report()
+                        except Exception:
+                            pass
+
+                        rows = summary.get("rows", [])
+                        metrics = summary.get("metrics", {})
+                        message = summary.get("message", "")
+                        status = message or f"Completed {len(rows)} result row(s)."
+                        if not full_run:
+                            status += " Report updated at `reports/evaluation_report.md`."
+                        df = pd.DataFrame(rows) if rows else pd.DataFrame(
+                            columns=["prompt_id", "assistant_type", "response"]
+                        )
+                        csv_path = str(RESULTS_CSV_PATH) if RESULTS_CSV_PATH.exists() else None
                         return (
-                            {"error": str(exc)},
+                            metrics,
+                            df,
+                            status,
+                            gr.update(value=csv_path, interactive=bool(csv_path)),
+                            summary,
+                        )
+
+                    def clear_evaluation():
+                        if RESULTS_CSV_PATH.exists():
+                            RESULTS_CSV_PATH.unlink()
+                        json_path = RESULTS_CSV_PATH.with_suffix(".json")
+                        if json_path.exists():
+                            json_path.unlink()
+                        return (
+                            {},
                             pd.DataFrame(),
-                            f"Evaluation failed: {exc}",
+                            "Results cleared.",
                             gr.update(value=None, interactive=False),
                             {"rows": [], "metrics": {}},
                         )
 
-                    try:
-                        generate_report()
-                    except Exception:
-                        pass
-
-                    rows = summary.get("rows", [])
-                    metrics = summary.get("metrics", {})
-                    message = summary.get("message", "")
-                    status = message or f"Completed {len(rows)} result row(s)."
-                    if not full_run:
-                        status += " Report updated at `reports/evaluation_report.md`."
-                    df = pd.DataFrame(rows) if rows else pd.DataFrame(
-                        columns=["prompt_id", "assistant_type", "response"]
+                    run_eval_btn.click(
+                        run_sample_evaluation,
+                        inputs=[eval_max_prompts, use_llm_judge],
+                        outputs=[metrics_summary, results_table, eval_status, download_csv, eval_state],
                     )
-                    csv_path = str(RESULTS_CSV_PATH) if RESULTS_CSV_PATH.exists() else None
-                    return (
-                        metrics,
-                        df,
-                        status,
-                        gr.update(value=csv_path, interactive=bool(csv_path)),
-                        summary,
+                    clear_eval_btn.click(
+                        clear_evaluation,
+                        outputs=[metrics_summary, results_table, eval_status, download_csv, eval_state],
                     )
-
-                def clear_evaluation():
-                    if RESULTS_CSV_PATH.exists():
-                        RESULTS_CSV_PATH.unlink()
-                    json_path = RESULTS_CSV_PATH.with_suffix(".json")
-                    if json_path.exists():
-                        json_path.unlink()
-                    return (
-                        {},
-                        pd.DataFrame(),
-                        "Results cleared.",
-                        gr.update(value=None, interactive=False),
-                        {"rows": [], "metrics": {}},
-                    )
-
-                run_eval_btn.click(
-                    run_sample_evaluation,
-                    inputs=[eval_max_prompts, use_llm_judge],
-                    outputs=[metrics_summary, results_table, eval_status, download_csv, eval_state],
-                )
-                clear_eval_btn.click(
-                    clear_evaluation,
-                    outputs=[metrics_summary, results_table, eval_status, download_csv, eval_state],
-                )
-        else:
-            with gr.Tab("Evaluation"):
-                gr.Markdown(
-                    "Evaluation runs **locally** only. "
-                    "Set `DEPLOYMENT_MODE=local` in `.env` and see README."
-                )
 
     return demo
 

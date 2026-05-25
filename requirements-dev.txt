@@ -1,7 +1,11 @@
 # Local development: Gradio UI, Gemini API, and tests (not installed on HF Spaces).
+# Must use Gradio 4.44.1 (matches HF Space). Gradio 5/6 breaks app.py (Chatbot type=).
 -r requirements.txt
 gradio==4.44.1
-pydantic==2.10.6
-starlette>=0.40.2,<1.0.0
 pytest>=8.0.0
 google-genai>=1.0.0
+
+# Prefer staged install (requirements-dev.txt one-shot may fail on websockets):
+#   pip install -r requirements.txt
+#   pip install gradio==4.44.1
+#   pip install pytest "google-genai>=1.0.0"

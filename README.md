@@ -125,7 +125,9 @@ python -m venv .venv
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
+pip install gradio==4.44.1
+pip install pytest "google-genai>=1.0.0"
 copy .env.example .env
 # Edit .env — add GEMINI_API_KEY for Gemini locally
 python app.py
@@ -135,12 +137,18 @@ python app.py
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
+pip install gradio==4.44.1
+pip install pytest "google-genai>=1.0.0"
 cp .env.example .env
 python app.py
 ```
 
-Open the URL printed in the terminal (typically `http://127.0.0.1:7860`).
+`pip install -r requirements-dev.txt` may fail on a **websockets** conflict between Gradio 4.44 and `google-genai`; use the three install lines above instead. Pip may warn about websockets — the app usually still runs.
+
+**`Chatbot ... unexpected keyword argument 'type'`** — install Gradio 4.44.1 (`pip install gradio==4.44.1`), not Gradio 5/6. Uninstall `hf-gradio` if present: `pip uninstall hf-gradio -y`.
+
+Open the URL printed in the terminal (typically `http://127.0.0.1:7860`). Use the **Chat** and **Evaluation** tabs at the top of the app.
 
 **First OSS message:** the Qwen model **lazy-loads** on first use; expect up to ~1–2 minutes on CPU before the first reply.
 

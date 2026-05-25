@@ -1,0 +1,30 @@
+# Secrets — never commit
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Model / HF cache
+.cache/
+hf_cache/
+
+# Runtime logs (may contain user messages)
+logs/*.jsonl
+
+# Internal planning docs (local only; not needed for interview / Spaces repo)
+PRD.md
+Phase_Prompts.md
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.cursor/

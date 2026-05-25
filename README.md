@@ -114,8 +114,8 @@ tests/                    # pytest suite
 **Requirements:** Python 3.10+, ~2 GB disk for OSS weights (first run downloads from Hugging Face).
 
 ```bash
-git clone <your-repo-url>
-cd ai-assistant-comparison
+git clone https://github.com/Nikhith221B/AI-Personal-Assistant-Comparison-Lab.git
+cd AI-Personal-Assistant-Comparison-Lab
 python -m venv .venv
 ```
 
@@ -123,7 +123,7 @@ python -m venv .venv
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 copy .env.example .env
 # Edit .env — add GEMINI_API_KEY for Gemini locally
 python app.py
@@ -133,7 +133,7 @@ python app.py
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env
 python app.py
 ```
@@ -261,23 +261,25 @@ The public Space runs **Qwen2.5-0.5B only** — no Gemini API key, no evaluation
 
 ### Deploy checklist
 
-1. On [huggingface.co/new-space](https://huggingface.co/new-space), create a **Gradio** Space from this Git repo (or upload).
-2. **Space hardware:** CPU basic is enough for 0.5B inference (slower but free-tier friendly).
-3. In **Settings → Repository secrets** (or **Variables**), add:
-   - `DEPLOYMENT_MODE` = `spaces`
-4. **Do not** set `GEMINI_API_KEY` on the Space.
-5. Entrypoint is **`app.py`** (also set in the README YAML frontmatter above for HF auto-detection).
-6. Dependencies come from pinned **`requirements.txt`** (`gradio==4.44.1`, `transformers`, `torch`, etc.).
-7. Push and wait for the Space build. The app **starts before** the model is downloaded; the first chat message triggers lazy load (1–3 minutes on CPU).
+1. On [huggingface.co/new-space](https://huggingface.co/new-space), create a **Gradio** Space (empty repo).
+2. Push this project to the Space git remote (`git push space main`). See clone URL on the Space page.
+3. **Space hardware:** CPU basic is enough for 0.5B inference (slower but free-tier friendly).
+4. In **Settings → Repository variables**, add `DEPLOYMENT_MODE` = `spaces`.
+5. **Do not** set `GEMINI_API_KEY` on the Space.
+6. Entrypoint is **`app.py`** (set in the README YAML frontmatter above).
+7. **`requirements.txt`** is runtime-only (torch, transformers, pillow pin). HF installs Gradio separately; local dev uses `requirements-dev.txt`.
+8. Wait for the build, then open the App tab. The first chat message triggers model download (1–3 minutes on CPU).
 
 ### What changes in Spaces mode
 
-| Feature | Local | Spaces (`DEPLOYMENT_MODE=spaces`) |
-|---------|-------|-----------------------------------|
-| Assistant selector | OSS + Gemini | OSS only (fixed label) |
-| Evaluation tab | Full runner | Read-only note → run locally |
-| `demo.launch` | Default host | `server_name="0.0.0.0"` for HF |
-| Conversation logs | `logs/conversations.jsonl` | Best-effort (skipped if disk write fails) |
+
+| Feature            | Local                      | Spaces (`DEPLOYMENT_MODE=spaces`)         |
+| ------------------ | -------------------------- | ----------------------------------------- |
+| Assistant selector | OSS + Gemini               | OSS only (fixed label)                    |
+| Evaluation tab     | Full runner                | Read-only note → run locally              |
+| `demo.launch`      | Default host               | `server_name="0.0.0.0"` for HF            |
+| Conversation logs  | `logs/conversations.jsonl` | Best-effort (skipped if disk write fails) |
+
 
 ### Verify locally before publishing
 
@@ -299,7 +301,7 @@ python app.py
 
 You should see OSS-only chat, no Gemini selector, and an Evaluation tab that points to the README — with **no crash** without `GEMINI_API_KEY`.
 
-**Public demo link:** *[Add after deployment: `https://huggingface.co/spaces/<user>/<repo>`]*
+**Public demo link:** https://huggingface.co/spaces/nikhith123/AI-Personal-Assistant-Comparison-Lab
 
 ---
 
@@ -320,6 +322,8 @@ Place UI captures in `assets/screenshots/` (e.g. chat comparison, eval metrics, 
 ---
 
 ## Testing
+
+Requires `pip install -r requirements-dev.txt` first.
 
 ```bash
 pytest tests/ -q

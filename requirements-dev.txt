@@ -1,0 +1,5 @@
+# Local development: Gradio UI, Gemini API, and tests (not installed on HF Spaces).
+-r requirements.txt
+gradio==4.44.1
+pytest>=8.0.0
+google-genai>=1.0.0
